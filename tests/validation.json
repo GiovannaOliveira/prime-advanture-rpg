@@ -1,0 +1,77 @@
+{
+  "status": "PASS",
+  "url": "http://127.0.0.1:8000",
+  "checks": [
+    "boot/assets",
+    "keyboard movement",
+    "island and NPC reachability",
+    "water collision",
+    "starter choice",
+    "attack, special move and turn lock",
+    "challenge retry/cancel",
+    "failed and successful capture",
+    "collection/potion",
+    "daily reward and reload persistence",
+    "shop",
+    "healing",
+    "difficulty",
+    "victory/defeat",
+    "XP level-up",
+    "map and guide",
+    "reset confirmation and actual reset",
+    "streak bonus",
+    "save normalization",
+    "spawn validity",
+    "1024px layout",
+    "corrupt JSON recovery",
+    "missing asset fallbacks"
+  ],
+  "reachable": [
+    {
+      "name": "Professor Willow",
+      "reachable": true
+    },
+    {
+      "name": "Milo",
+      "reachable": true
+    },
+    {
+      "name": "Nora",
+      "reachable": true
+    },
+    {
+      "name": "Welcome, explorer!",
+      "reachable": true
+    },
+    {
+      "name": "Whispering Grove",
+      "reachable": true
+    },
+    {
+      "name": "Sunbeam Beach",
+      "reachable": true
+    },
+    {
+      "name": "Quiet Cove",
+      "reachable": true
+    },
+    {
+      "name": "grove",
+      "reachable": true
+    },
+    {
+      "name": "meadow",
+      "reachable": true
+    },
+    {
+      "name": "beach",
+      "reachable": true
+    },
+    {
+      "name": "chest",
+      "reachable": true
+    }
+  ],
+  "page_errors": [],
+  "screenshots": "/tmp/prime-adveture-tests"
+}
