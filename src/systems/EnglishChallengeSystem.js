@@ -2,25 +2,17 @@
 Prime.systems.EnglishChallengeSystem = class {
   constructor(game) {
     this.game = game;
-    this.recent = [];
+    this.scheduler = new Prime.systems.QuestionScheduler(game.store);
     this.current = null;
   }
   open(context, onSuccess, onCancel) {
-    const level = this.game.store.state.difficulty;
-    let pool = Prime.data.questions.filter(q => q.level === level && !this.recent.includes(q.id));
-    if (!pool.length) {
-      this.recent = [];
-      pool = Prime.data.questions.filter(q => q.level === level);
+    const selection = this.scheduler.next(this.game.store.state.difficulty);
+    if (!selection) {
+      this.game.ui.toast('No questions are available at this level yet. Please choose another level.');
+      onCancel?.();
+      return;
     }
-    const q = pool[Math.floor(Math.random() * pool.length)];
-    this.recent.push(q.id);
-    this.current = {
-      q,
-      context,
-      onSuccess,
-      onCancel,
-      solved: false
-    };
+    this.current = { ...selection, context, onSuccess, onCancel };
     this.render();
   }
   render() {
@@ -30,7 +22,7 @@ Prime.systems.EnglishChallengeSystem = class {
       onCancel
     } = this.current;
     const ui = this.game.ui;
-    ui.open(`<div class="panel-header"><div><div class="eyebrow">A LITTLE ENGLISH MAGIC · ${q.level.toUpperCase()}</div><h1>${context}</h1><span class="type-tag">${q.category}</span></div><button class="close" data-action="cancel" aria-label="Close challenge">×</button></div><p class="question">${q.text}</p><div class="answers">${q.options.map((o,i)=>`<button class="answer" data-answer="${i}"><span>${String.fromCharCode(65+i)}</span>${o}</button>`).join('')}</div><div id="feedback" class="feedback">Take your time. You can try again!</div><div class="challenge-footer"><span>Small steps make great explorers.</span><button id="continue-question" class="primary" hidden>Continue →</button></div>`, 'challenge', () => {
+    ui.open(`<div class="panel-header"><div><div class="eyebrow">A LITTLE ENGLISH MAGIC · ${q.level.toUpperCase()}</div><h1>${context}</h1><span class="type-tag">${q.topic} · ${q.skill}</span> <span class="type-tag">${this.current.mode === 'review' ? 'Review · Round ' + this.current.cycle : 'New challenge'}</span></div><button class="close" data-action="cancel" aria-label="Close challenge">×</button></div><p class="question">${q.text}</p><div class="answers">${q.options.map((o,i)=>`<button class="answer" data-answer="${i}"><span>${String.fromCharCode(65+i)}</span>${o}</button>`).join('')}</div><div id="feedback" class="feedback">Take your time. You can try again!</div><div class="challenge-footer"><span>Small steps make great explorers.</span><button id="continue-question" class="primary" hidden>Continue →</button></div>`, 'challenge', () => {
       this.current = null;
       onCancel?.();
     });
@@ -46,7 +38,9 @@ Prime.systems.EnglishChallengeSystem = class {
     const c = this.current;
     if (!c || c.solved || button.disabled) return;
     const f = document.getElementById('feedback');
-    if (index !== c.q.answer) {
+    const result = this.scheduler.answer(c, index);
+    if (!result) return;
+    if (!result.correct) {
       button.classList.add('incorrect');
       button.disabled = true;
       f.className = 'feedback error';

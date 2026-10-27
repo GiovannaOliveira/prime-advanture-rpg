@@ -170,10 +170,16 @@ Prime.ui.UI = class {
   }
   englishClub() {
     const s = this.game.store.state;
-    this.open(this.header('LEARN A LITTLE, EXPLORE A LOT', 'Welcome to the English club!') + '<div class="english-icon">Aa ✧</div><p>Words are little keys. They help you use special moves, make new friends, and open your daily gift.</p>' + `<div class="stats-grid"><div><b>${s.answers}</b><small>QUESTIONS SOLVED</small></div><div><b>${s.playerXp}</b><small>ADVENTURE XP</small></div><div><b>${s.streak}</b><small>DAILY CHEST STREAK</small></div></div><div class="settings-row"><label for="difficulty">Your English level<small>You can change this whenever you like.</small></label><select id="difficulty">${['Beginner','Elementary','Intermediate'].map(l=>`<option ${s.difficulty===l?'selected':''}>${l}</option>`).join('')}</select></div><div class="button-row"><button class="primary" id="practice-btn">Try a little question →</button><button class="secondary" id="guide-btn">How to play</button></div>`, 'club');
+    this.open(this.header('LEARN A LITTLE, EXPLORE A LOT', 'Welcome to the English club!') + '<div class="english-icon">Aa ✧</div><p>Words are little keys. They help you use special moves, make new friends, and open your daily gift.</p>' + `<div class="stats-grid"><div><b>${s.answers}</b><small>QUESTIONS SOLVED</small></div><div><b>${s.playerXp}</b><small>ADVENTURE XP</small></div><div><b>${s.streak}</b><small>DAILY CHEST STREAK</small></div></div><div class="settings-row"><label for="difficulty">Your English level<small>You can change this whenever you like.</small></label><select id="difficulty">${['Beginner','Elementary','Intermediate'].map(l=>`<option ${s.difficulty===l?'selected':''}>${l}</option>`).join('')}</select></div><p class="progress-note" id="question-journey" role="status"></p><div class="button-row"><button class="primary" id="practice-btn">Try a little question →</button><button class="secondary" id="guide-btn">How to play</button></div>`, 'club');
+    const updateJourney = () => {
+      const stats = this.game.english.scheduler.stats(s.difficulty);
+      document.getElementById('question-journey').textContent = `${s.difficulty}: ${stats.seen} of ${stats.total} questions explored · ${stats.answered} answered · ${stats.firstTry} solved on the first try.`;
+    };
+    updateJourney();
     document.getElementById('difficulty').onchange = e => {
       s.difficulty = e.target.value;
       this.game.store.save();
+      updateJourney();
     };
     document.getElementById('practice-btn').onclick = () => this.game.english.open('Let’s learn something new!', () => this.englishClub(), () => this.englishClub());
     document.getElementById('guide-btn').onclick = () => this.guide();

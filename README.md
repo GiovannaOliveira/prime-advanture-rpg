@@ -59,9 +59,33 @@ Wild encounters spawn in the marked patches every 3–6 seconds, up to eight at 
 
 ### English club
 
-The initial bank contains **20 reviewed multiple-choice questions**: 8 Beginner, 6 Elementary, and 6 Intermediate. Change the level in English club; it determines the actual question pool. Feedback explains the answer, and an incorrect choice can be retried without losing an item or battle turn. Questions power special moves, captures, and daily rewards; the English club also offers free practice.
+The offline bank contains **300 authored and reviewed multiple-choice questions**: **150 Beginner, 100 Elementary, and 50 Intermediate**. Every question has exactly three distinct options, one correct answer, and a short, kind explanation. The five themes are Nature, Creatures, Friendship, Exploration, and Everyday life; skills are Vocabulary, Grammar, Reading, and Dialogue. Content covers distinct words, language structures, short stories, and conversational situations rather than generating name/number substitutions at runtime.
 
-Questions and explanations live in `src/data/questions.js`. Each entry has an ID, level, category, text, answer options, correct index, and explanation. This is a local fixed question bank, ready for future content changes. Student accounts, individual assignments, teacher dashboards, and automated personalization are not implemented.
+Change the level in English club; its progress note shows distinct questions explored, answered, and solved on the first try for that level. Questions power the existing special moves, captures, daily rewards, and free practice. Game rewards are unchanged.
+
+**New questions first.** A question is recorded as presented as soon as it opens, even if you cancel it or reload before answering. Selection uses only unseen questions in the chosen level until that bank is exhausted. It alternates themes when another theme is available. The three options are shuffled for each presentation, with the correct answer carried along explicitly; source data is never reordered.
+
+**Review after exhaustion.** Once all questions in that level have appeared, the challenge badge changes to Review and shows a round number. Each question appears at most once in that review round. The selector avoids up to the twelve most recently presented questions when older eligible questions remain and changes theme when possible. Within those recency/theme constraints, questions with previous mistakes come first, followed by unfinished questions. After every question has appeared in a round, another round starts. Review round membership and ordering history survive reloads and level changes.
+
+Wrong answers get educational feedback and may be retried. The same wrong option cannot be submitted twice, and a solved question cannot award XP twice. History records presentations, presentations with a response, completed questions, first-try completions, incorrect choices, ordering, and last presentation/response times. First-try means the first submitted choice in that presentation; improving on a later review can earn a first-try success for that later presentation. The club counts distinct question IDs with such events; aggregate game XP/solved counts still include review rewards.
+
+Question banks are in `src/data/questions/beginner.js`, `elementary.js`, and `intermediate.js`. The small registry `src/data/questions.js` loads first. Each bank registers fixed records with this shape:
+
+```js
+Prime.data.registerQuestions('Beginner', [{
+  id: 'b151',
+  topic: 'Nature',
+  skill: 'Vocabulary',
+  text: 'An original, unambiguous question goes here.',
+  options: ['Correct answer', 'Different alternative', 'Another alternative'],
+  answer: 0,
+  explanation: 'A short explanation of the correct answer.'
+}]);
+```
+
+The example is a schema illustration, not extra shipped content. To add a real batch, append reviewed records to the matching bank, or add a classic bank script after the registry in `index.html`. No scheduler changes are required. Keep IDs unique and stable: retain an ID for a wording correction, use a fresh ID for a genuinely new question, and never recycle IDs. Include the level through registration plus a theme, skill, three options, correct zero-based index, and explanation. Run the bank tests and update the expected distribution when deliberately expanding beyond 300. Questions added during a review are offered as new content before review continues.
+
+The bank is fixed offline content, not live AI generation. Student accounts, individual assignments, teacher dashboards, Asakiri/Scibly integration, and automated personalization are not implemented. No third-party course content or code was copied into these questions.
 
 ### Daily gift
 
@@ -71,9 +95,11 @@ Cooldown and streak use the device clock and browser `localStorage`; they surviv
 
 ## Saving and resetting
 
-The game saves creatures, selected starter, active friend, XP, answers, coins, items, daily gift, difficulty, and safe player position under `prime-adveture-save-v1` in local storage. Saving runs during progression changes, every few seconds of play, and when leaving the page. Loaded values are validated and normalized; corrupt or unsupported-version saves safely start a new game. Position is restored only on walkable ground.
+The game saves creatures, selected starter, active friend, XP, answers, coins, items, daily gift, difficulty, safe player position, and per-question learning history under `prime-adveture-save-v1` in local storage. Saving runs during progression changes, every few seconds of play, and when leaving the page. Loaded values are validated and normalized; corrupt or unsupported-version saves safely start a new game. Position is restored only on walkable ground.
 
 Use **Settings → Reset progress → Yes, start again** to start over. This confirmation deletes only this game's browser save. **Return to meadow** changes position without deleting progress.
+
+Existing version-1 saves without question history retain their creatures, coins, XP, items, daily rewards, and position. The new history starts empty; past question-level results cannot be reconstructed from the old aggregate answer count. Corrupt question-history fields are normalized independently of the rest of the save. Reset progress clears the question history too. Saves remain browser/origin-specific.
 
 If the browser refuses storage, play remains available for the current tab and the footer reports that saving is unavailable. No secrets, student names, or personal data are stored.
 
@@ -86,13 +112,16 @@ src/main.js                Boot and startup error handling
 src/core/                  Main loop, asset loader, input
 src/world/                 Terrain renderer, camera-space drawing, collision geometry
 src/entities/              Player and following companion
-src/systems/               Encounters, combat, English, saving, XP, daily gifts
+src/systems/               Encounters, combat, English scheduler/UI, saving, XP, daily gifts
 src/ui/                    HUD, collection, questions, NPCs, shop, map, settings
-src/data/                  Asset registry, frame mapping, creature stats, map, questions
+src/data/                  Asset registry, frame mapping, creature stats, map, question registry
+src/data/questions/        Three authored offline banks, grouped by level
 assets/                    Only the graphics/fonts used by this prototype
 ASSETS.md                  Source-pack attribution and asset mapping
 TESTING.md                 Browser validation and limitations
-tests/playtest.py          Optional Playwright acceptance suite
+tests/questions.test.cjs   Dependency-free Node question-bank/scheduler tests
+tests/question-playtest.py Question/history browser integration tests
+tests/playtest.py          Existing gameplay regression suite
 ```
 
 The central registry is `src/data/assets.js`, including explicit sprite-sheet frame sizes. Missing images warn in the console and use a readable Canvas/CSS fallback instead of preventing startup. UI sprite sheets use CSS cropping, so they do not require Canvas pixel readback from local files.

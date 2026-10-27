@@ -20,7 +20,8 @@ Prime.systems.ProgressionSystem = class {
       lastClaim: 0,
       streak: 0,
       history: [],
-      position: null
+      position: null,
+      questionHistory: Prime.systems.QuestionScheduler.emptyHistory()
     };
   }
   load() {
@@ -67,6 +68,7 @@ Prime.systems.ProgressionSystem = class {
       x: raw.position.x,
       y: raw.position.y
     };
+    s.questionHistory = Prime.systems.QuestionScheduler.normalize(raw.questionHistory);
     return s;
   }
   save() {

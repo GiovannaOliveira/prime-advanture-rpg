@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "checks": [
+    "300 questions loaded",
+    "legacy v1 save compatibility",
+    "presentation saved before answering",
+    "wrong answer and cancellation persisted",
+    "reload avoids already seen questions",
+    "shuffled correct answer",
+    "first-try history and duplicate reward guard",
+    "level switching and progress display",
+    "complete bank exhaustion",
+    "review recency and persisted round",
+    "long-question desktop layout"
+  ],
+  "page_errors": [],
+  "screenshots": "/tmp/prime-question-tests",
+  "node_tests": {
+    "command": "node --test tests/questions.test.cjs",
+    "passed": 9,
+    "failed": 0
+  }
+}
