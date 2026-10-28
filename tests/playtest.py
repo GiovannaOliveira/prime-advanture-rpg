@@ -47,7 +47,7 @@ async def encounter(page):
     await page.evaluate('''()=>{
         const g=Prime.game;
         let c=g.encounters.wild.find(c=>c.zone==='meadow');
-        if(!c){g.encounters.spawn(g.world.data.zones.find(z=>z.id==='meadow'),true);c=g.encounters.wild.find(c=>c.zone==='meadow');}
+        if(!c){g.encounters.wild=g.encounters.wild.slice(0,Prime.data.rules.maxWild-1);g.encounters.spawn(g.world.data.zones.find(z=>z.id==='meadow'),true);c=g.encounters.wild.find(c=>c.zone==='meadow');}
         if(!c){c=g.encounters.wild[0];}
         g.player.x=c.x;g.player.y=c.y+35;g.updateInteraction();
     }''')
@@ -73,6 +73,7 @@ async def main():
         # Every area and NPC can be reached from spawn with feet-level collision checks.
         connectivity=await page.evaluate('''()=>{
             const g=Prime.game,w=g.world,step=16,start=[27*2,23*2],queue=[start],seen=new Set([start.join(',')]);
+            const locked=g.store.state.exploration.unlocked;g.store.state.exploration.unlocked=w.data.islands.map(r=>r.id);
             for(let i=0;i<queue.length;i++){
                 const [x,y]=queue[i];for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
                     const nx=x+dx,ny=y+dy,k=nx+','+ny;
@@ -80,11 +81,11 @@ async def main():
                 }
             }
             const points=[...w.data.npcs.map(n=>({name:n.name,x:n.x*32,y:n.y*32})),...w.data.signs.map(n=>({name:n.title,x:n.x*32,y:n.y*32})),...w.data.zones.map(n=>({name:n.id,x:(n.x+n.w/2)*32,y:(n.y+n.h/2)*32})),{name:'chest',x:w.data.chest.x*32,y:w.data.chest.y*32}];
-            return points.map(p=>({name:p.name,reachable:queue.some(([x,y])=>Math.hypot(x*step-p.x,y*step-p.y)<60)}));
+            const result=points.map(p=>({name:p.name,reachable:queue.some(([x,y])=>Math.hypot(x*step-p.x,y*step-p.y)<60)}));g.store.state.exploration.unlocked=locked;return result;
         }''')
         assert all(p['reachable'] for p in connectivity), connectivity
         # Actual water collision: holding right cannot carry the player out into the sea.
-        await page.evaluate('Prime.game.player.x=35*32-15;Prime.game.player.y=27*32')
+        await page.evaluate('Prime.game.player.x=35*32-15;Prime.game.player.y=24*32')
         await page.keyboard.down('d');await page.wait_for_timeout(500);await page.keyboard.up('d')
         assert await page.evaluate('Prime.game.world.walkable(Prime.game.player.x,Prime.game.player.y)')
         assert await page.evaluate('Prime.game.player.x') < 36*32

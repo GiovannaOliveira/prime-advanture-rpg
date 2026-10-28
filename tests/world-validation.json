@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "world": {
+    "regions": 10,
+    "species": 56,
+    "pokemon": 40,
+    "missing": [],
+    "unplaced": 0
+  },
+  "geometryTargets": 34,
+  "spawnZones": 14,
+  "importedPokemonCaptured": 40,
+  "legacyCreaturesPreserved": 6,
+  "page_errors": [],
+  "screenshots": "/tmp/prime-expansion-tests",
+  "node_tests": {
+    "command": "node --test tests/questions.test.cjs tests/world-data.test.cjs",
+    "passed": 14,
+    "failed": 0
+  }
+}

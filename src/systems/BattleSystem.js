@@ -24,6 +24,7 @@ Prime.systems.BattleSystem = class {
     }
     this.current = {
       wild,
+      background: this.game.world.data.islands.find(r => r.id === wild.region)?.background || (wild.region === 'beach' ? 'coast' : 'meadow'),
       friend: active,
       locked: false,
       message: `A wild ${Prime.data.creatures[wild.species].name} says hello!\nWhat will you do?`,
@@ -33,7 +34,7 @@ Prime.systems.BattleSystem = class {
   }
   stats(c, side) {
     const d = Prime.data.creatures[c.species];
-    return `<div class="battle-stats ${side}-stats"><strong>${d.name}</strong><small>Lv. ${c.level}</small><div class="hp-track"><i style="width:${c.hp/c.maxHp*100}%"></i></div><div class="hp-text">${c.hp} / ${c.maxHp} HP · ${d.type}</div></div>`;
+    return `<div class="battle-stats ${side}-stats"><strong>${d.name}</strong><small>Lv. ${c.level}</small><div class="hp-track"><i style="width:${c.hp/c.maxHp*100}%"></i></div><div class="hp-text">${c.hp} / ${c.maxHp} HP · ${(d.types||[d.type]).join(' / ')}</div></div>`;
   }
   render() {
     const b = this.current;
@@ -42,7 +43,7 @@ Prime.systems.BattleSystem = class {
       wild,
       friend
     } = b, assets = this.game.assets;
-    this.game.ui.open(`<div class="battle-scene"><span class="battle-label">A NEW FRIEND, A NEW CHALLENGE</span><button class="close" data-action="cancel" aria-label="Run from battle">×</button>${this.stats(wild,'enemy')}${this.stats(friend,'friend')}${assets.markup(wild.species+'Idle',190,0,0,96,'fighter enemy')}${assets.markup(friend.species,220,1,0,96,'fighter friend')}</div><div class="battle-bottom"><p class="battle-message" role="status">${b.message}</p><div class="battle-actions">${b.ended?'<button class="primary" id="return-map" style="grid-column:1/-1">Back to the island →</button>':`<button data-battle="attack">Attack<small>A friendly little nudge</small></button><button data-battle="special">Special Move<small>Answer an English question</small></button><button data-battle="capture">Capture<small>${this.game.store.state.orbs} orbs left · English challenge</small></button><button data-battle="run">Run<small>Back to exploring</small></button>`}</div></div>`, 'battle', () => this.run(), 'battle-panel');
+    this.game.ui.open(`<div class="battle-scene biome-${wild.region||'meadow'}" style="background-image:url('${Prime.data.assets[b.background||'meadow']}')"><span class="battle-label">A NEW FRIEND, A NEW CHALLENGE</span><button class="close" data-action="cancel" aria-label="Run from battle">×</button>${this.stats(wild,'enemy')}${this.stats(friend,'friend')}${assets.creatureMarkup(wild.species,190,'idle','fighter enemy')}${assets.creatureMarkup(friend.species,220,'back','fighter friend')}</div><div class="battle-bottom"><p class="battle-message" role="status">${b.message}</p><div class="battle-actions">${b.ended?'<button class="primary" id="return-map" style="grid-column:1/-1">Back to the island →</button>':`<button data-battle="attack">Attack<small>A friendly little nudge</small></button><button data-battle="special">Special Move<small>Answer an English question</small></button><button data-battle="capture">Capture<small>${this.game.store.state.orbs} orbs left · English challenge</small></button><button data-battle="run">Run<small>Back to exploring</small></button>`}</div></div>`, 'battle', () => this.run(), 'battle-panel');
     document.querySelectorAll('[data-battle]').forEach(el => {
       el.disabled = b.locked;
       el.onclick = () => this.action(el.dataset.battle);
@@ -62,7 +63,7 @@ Prime.systems.BattleSystem = class {
       this.render();
       return;
     }
-    if (action === 'capture' && this.game.store.state.party.length >= 100) {
+    if (action === 'capture' && this.game.store.state.party.length >= Prime.data.rules.maxCollection) {
       b.message = 'Your collection is full. You can still battle and explore!';
       this.render();
       return;
@@ -86,15 +87,10 @@ Prime.systems.BattleSystem = class {
   damage(attacker, defender, special = false) {
     const a = Prime.data.creatures[attacker.species],
       d = Prime.data.creatures[defender.species];
-    const strengths = {
-      Fire: 'Grass',
-      Grass: 'Water',
-      Water: 'Fire',
-      Earth: 'Fire',
-      Air: 'Grass',
-      Ice: 'Air'
-    };
-    const multiplier = strengths[a.type] === d.type ? 1.2 : 1;
+    const canonical = type => Prime.data.typeAliases?.[type] || type;
+    const targetTypes = (d.types || [d.type]).map(canonical);
+    const advantage = Prime.data.typeStrengths?.[canonical(a.type)] || [];
+    const multiplier = targetTypes.some(type => advantage.includes(type)) ? 1.2 : 1;
     return Math.max(3, Math.floor((a.attack + attacker.level * 2 - d.defense * .6) * (special ? 1.6 : 1) * multiplier));
   }
   resolve(action) {
@@ -156,7 +152,7 @@ Prime.systems.BattleSystem = class {
     if (side === 'friend' && this.current) {
       const enemy = document.querySelector('.fighter.enemy'),
         key = this.current.wild.species + 'Attack';
-      if (enemy && !this.game.assets.missing.includes(key)) {
+      if (enemy && Prime.data.creatures[this.current.wild.species].assetFormat !== 'portrait' && !this.game.assets.missing.includes(key)) {
         const idle = enemy.style.backgroundImage;
         enemy.style.backgroundImage = `url('${Prime.data.assets[key]}')`;
         setTimeout(() => {

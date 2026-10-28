@@ -14,10 +14,5 @@
     "long-question desktop layout"
   ],
   "page_errors": [],
-  "screenshots": "/tmp/prime-question-tests",
-  "node_tests": {
-    "command": "node --test tests/questions.test.cjs",
-    "passed": 9,
-    "failed": 0
-  }
+  "screenshots": "/tmp/prime-question-tests"
 }

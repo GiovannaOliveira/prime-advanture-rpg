@@ -1413,3 +1413,228 @@ select {
 .location-card svg {
   margin-left: 5px
 }
+
+/* Expanded field guide and atlas; keep these details behind their existing menus. */
+.collection-filters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 12px 0 18px
+}
+
+.collection-filters label {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted)
+}
+
+.collection-filters select {
+  width: 100%;
+  font-size: 12px
+}
+
+.rarity-label {
+  font-size: 10px;
+  color: #937846;
+  margin: 6px 0
+}
+
+.creature-card .habitat {
+  font-size: 10px !important;
+  line-height: 1.5;
+  min-height: 0 !important
+}
+
+.collection-grid .creature-card p {
+  font-size: 11px;
+  line-height: 1.5
+}
+
+.collection-grid .creature-card button {
+  margin-top: 12px
+}
+
+.region-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 16px
+}
+
+.region-entry {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #dce1cc;
+  border-radius: 9px;
+  padding: 10px;
+  background: #f0f1e0
+}
+
+.region-entry>div {
+  flex: 1;
+  min-width: 0
+}
+
+.region-entry strong {
+  display: block;
+  font-size: 12px
+}
+
+.region-entry small {
+  display: block;
+  font-size: 9px;
+  color: #7a8970
+}
+
+.region-entry p {
+  font-size: 10px !important;
+  line-height: 1.5;
+  margin: 5px 0 0
+}
+
+.region-entry button {
+  padding: 7px 10px;
+  font-size: 10px
+}
+
+.region-number {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: #fffdf2;
+  font-weight: bold
+}
+
+.region-entry.locked {
+  background: #e8e9e2
+}
+
+.map-canvas {
+  height: auto;
+  aspect-ratio: 1000/560
+}
+
+.static-sprite {
+  animation: none !important;
+  transform: scaleX(var(--sprite-facing, 1))
+}
+
+.static-sprite.hit {
+  animation: portrait-hit .3s steps(2) !important
+}
+
+@keyframes portrait-hit {
+  50% {
+    opacity: .25;
+    transform: translateX(8px) scaleX(var(--sprite-facing, 1))
+  }
+}
+
+.type-magic,
+.type-fairy {
+  background: #ecdcec;
+  color: #9c648c
+}
+
+.type-shadow,
+.type-dark,
+.type-ghost {
+  background: #e0dce8;
+  color: #756489
+}
+
+.type-electric {
+  background: #f4edc5;
+  color: #9e852b
+}
+
+.type-ground,
+.type-rock {
+  background: #e8ddc9;
+  color: #8b714d
+}
+
+.type-poison {
+  background: #e4d8ed;
+  color: #8a5b9d
+}
+
+.type-bug {
+  background: #e2e8cc;
+  color: #748843
+}
+
+.type-flying {
+  background: #e1e7ed;
+  color: #6b839b
+}
+
+.type-normal {
+  background: #e7e6dc;
+  color: #81806e
+}
+
+.type-psychic {
+  background: #efdae5;
+  color: #a56486
+}
+
+.type-steel {
+  background: #dce5e4;
+  color: #6a8583
+}
+
+.type-fighting {
+  background: #ecdcd0;
+  color: #a4775b
+}
+
+.type-dragon {
+  background: #dcdff0;
+  color: #6b72a8
+}
+
+@media(max-width:760px) {
+  .region-list {
+    grid-template-columns: 1fr
+  }
+
+  .collection-filters {
+    gap: 5px
+  }
+
+  .collection-filters select {
+    font-size: 10px
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .static-sprite.hit {
+    animation: none !important
+  }
+}
+
+.unknown .sprite-image {
+  filter: brightness(0);
+  opacity: .17
+}
+
+.battle-scene.biome-caverns {
+  background-color: #a49ab4;
+  background-image: linear-gradient(150deg, #514e6e 0 17%, transparent 17%), linear-gradient(205deg, #625c7d 0 24%, transparent 24%), repeating-linear-gradient(90deg, transparent 0 70px, #dbcfeb35 70px 75px), linear-gradient(#6b6588 0 36%, #b4aac5 36% 100%) !important
+}
+
+.battle-scene.biome-ember {
+  background-image: linear-gradient(150deg, #a17459 0 25%, transparent 25%), linear-gradient(210deg, #805b4c 0 29%, transparent 29%), linear-gradient(#cfaa7f 0 40%, #c0926e 40% 100%) !important
+}
+
+.battle-scene.biome-ruins {
+  background-color: #9cb5ab;
+  background-blend-mode: multiply
+}

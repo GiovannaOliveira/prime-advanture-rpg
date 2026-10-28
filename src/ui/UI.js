@@ -83,10 +83,10 @@ Prime.ui.UI = class {
     return `<div class="panel-header"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1></div><button class="close" data-action="cancel" aria-label="Close">×</button></div>`;
   }
   tag(d) {
-    return `<span class="type-tag type-${d.type.toLowerCase()}">${d.type}</span>`;
+    return (d.types || [d.type]).map(type => `<span class="type-tag type-${type.toLowerCase()}">${type}</span>`).join(' ');
   }
   creatureArt(species, size = 96, extra = '') {
-    return this.game.assets.markup(species, size, 0, 0, 96, extra);
+    return this.game.assets.creatureMarkup(species, size, 'front', extra);
   }
   updateHUD() {
     const s = this.game.store.state,
@@ -94,19 +94,19 @@ Prime.ui.UI = class {
       unique = new Set(s.party.map(c => c.species));
     document.getElementById('coins').textContent = s.coins;
     document.getElementById('orbs').textContent = s.orbs;
-    document.getElementById('collection-count').textContent = `${unique.size}/6`;
+    document.getElementById('collection-count').textContent = `${unique.size}/${Object.keys(Prime.data.creatures).length}`;
     if (active) {
       const d = Prime.data.creatures[active.species];
       document.getElementById('active-name').textContent = d.name;
       document.getElementById('active-details').textContent = `${d.type} · ${active.hp} / ${active.maxHp} HP`;
       document.getElementById('active-level').textContent = `Lv. ${active.level}`;
       document.getElementById('active-hp').style.width = active.hp / active.maxHp * 100 + '%';
-      document.getElementById('companion-art').innerHTML = this.game.assets.markup(active.species + 'Icon', 46, 0, 0, 32);
+      document.getElementById('companion-art').innerHTML = this.game.assets.iconMarkup(active.species, 46);
     }
     const stage = !s.party.length ? 0 : !s.captures && !s.wins ? 1 : 2;
     const titles = ['Every adventure starts with a friend.', 'Your next friend is out there.', 'Little steps. Big discoveries.'],
-      texts = ['Meet Professor Willow at the Academy, or choose your first creature right here.', 'Find the tall grass to your left. Press E near a wild creature to say hello!', 'Keep meeting creatures and learning English. Your daily chest has a little gift, too.'],
-      actions = ['Choose your first friend', 'Find the wild friends', 'Open your adventure journal'];
+      texts = ['Meet Professor Willow at the Academy, or choose your first creature right here.', 'Find the tall grass to your left. Press E near a wild creature to say hello!', `Discover ${s.exploration.visited.length} / ${Prime.data.map.islands.length} regions. Read field notes and solve questions to open new trails.`],
+      actions = ['Choose your first friend', 'Find the wild friends', 'Open your explorer map'];
     document.getElementById('quest-title').textContent = titles[stage];
     document.getElementById('quest-text').textContent = texts[stage];
     document.getElementById('quest-action').innerHTML = actions[stage] + ' <span>→</span>';
@@ -119,7 +119,7 @@ Prime.ui.UI = class {
     else if (!s.captures && !s.wins) {
       this.toast('Wild friends live in the tall grass, just left of the Welcome Meadow path.');
       this.close(true);
-    } else this.collection();
+    } else this.map();
   }
   starters() {
     if (this.game.store.state.party.length) {
@@ -139,13 +139,34 @@ Prime.ui.UI = class {
     this.open(`<div class="dialogue-name">${name}</div><p class="dialogue-text">${text}</p><div class="button-row">${actions.map((a,i)=>`<button class="${i===0?'primary':'secondary'}" data-dialogue="${i}">${a.label}</button>`).join('')}${!actions.length?'<button class="primary" data-action="cancel">Back to exploring →</button>':''}</div>`);
     document.querySelectorAll('[data-dialogue]').forEach(b => b.onclick = actions[Number(b.dataset.dialogue)].action);
   }
-  collection() {
-    const s = this.game.store.state;
-    this.open(this.header('YOUR ADVENTURE JOURNAL', 'Friends make the journey.') + `<p>${new Set(s.party.map(c=>c.species)).size} of 6 species found · ${s.captures} captures · ${s.wins} friendly battles won</p><div class="roster" aria-label="Choose any captured friend">${s.party.map(c=>`<button class="roster-friend" data-active="${c.id}" ${c.id===s.activeId?'disabled':''}>${this.game.assets.markup(c.species+'Icon',30,0,0,32)}<span><b>${Prime.data.creatures[c.species].name}</b><small>Lv. ${c.level} · ${c.hp}/${c.maxHp} HP${c.id===s.activeId?' · Active':''}</small></span></button>`).join('')}</div><div class="collection-grid">` + Object.entries(Prime.data.creatures).map(([id, d]) => {
+  collection(filters = this.collectionFilters || {
+    type: 'All',
+    rarity: 'All',
+    region: 'All'
+  }) {
+    this.collectionFilters = filters;
+    const s = this.game.store.state,
+      entries = Object.entries(Prime.data.creatures),
+      all = Prime.data.map.islands;
+    const types = [...new Set(entries.flatMap(([, d]) => d.types || [d.type]))].sort();
+    const options = (items, value) => ['All', ...items].map(t => `<option value="${t}" ${t===value?'selected':''}>${t}</option>`).join('');
+    const visible = entries.filter(([id, d]) => {
+      if (filters.type === 'All' && filters.rarity === 'All' && filters.region === 'All') return true;
+      if (!s.party.some(c => c.species === id)) return false;
+      return (filters.type === 'All' || (d.types || [d.type]).includes(filters.type)) && (filters.rarity === 'All' || d.rarity === filters.rarity) && (filters.region === 'All' || d.regions.includes(filters.region));
+    });
+    this.open(this.header('YOUR ADVENTURE JOURNAL', 'Friends make the journey.') + `<p>${new Set(s.party.map(c=>c.species)).size} of ${entries.length} species found · ${s.captures} captures · ${s.wins} friendly battles won</p>
+      <div class="collection-filters"><label>Type<select id="filter-type">${options(types,filters.type)}</select></label><label>Rarity<select id="filter-rarity">${options(['Common','Uncommon','Rare','Legendary'],filters.rarity)}</select></label><label>Habitat<select id="filter-region"><option value="All">All</option>${all.map(r=>`<option value="${r.id}" ${r.id===filters.region?'selected':''}>${r.name}</option>`).join('')}</select></label></div>
+      <div class="roster" aria-label="Choose any captured friend">${s.party.map(c=>`<button class="roster-friend" data-active="${c.id}" ${c.id===s.activeId?'disabled':''}>${this.game.assets.iconMarkup(c.species,30)}<span><b>${Prime.data.creatures[c.species].name}</b><small>Lv. ${c.level} · ${c.hp}/${c.maxHp} HP${c.id===s.activeId?' · Active':''}</small></span></button>`).join('')}</div>
+      <div class="collection-grid">` + visible.map(([id, d]) => {
       const copies = s.party.filter(c => c.species === id),
         c = copies.find(c => c.id === s.activeId) || copies[0];
-      return `<article class="creature-card ${c?'':'unknown'}">${this.creatureArt(id,78)}<h2>${c?d.name:'???'}</h2>${this.tag(d)}${c?`<p>Lv. ${c.level} · ${c.hp}/${c.maxHp} HP</p><small>${c.xp}/${c.level*25} XP · ${copies.length} in collection</small><button class="${c.id===s.activeId?'secondary':'primary'}" data-active="${c.id}" ${c.id===s.activeId?'disabled':''}>${c.id===s.activeId?'Your active friend':'Explore together'}</button>`:'<p>Waiting to meet you!</p><small>'+d.rarity+'</small>'}</article>`;
-    }).join('') + `</div><div class="button-row"><button class="secondary" id="potion-btn" ${!s.potions||!this.game.store.active()?'disabled':''}>Use a potion (${s.potions}) · Heal active friend</button><button class="secondary" id="close-collection">Back to the island</button></div><p class="hint">Nora at the Healing House heals all your friends for free. All captured friends stay in your collection.</p>`, 'collection');
+      return `<article class="creature-card ${c?'':'unknown'}">${c?this.creatureArt(id,78):this.creatureArt(id,78).replace(/aria-label="[^"]*"/,'aria-label="Undiscovered creature"')}<h2>${c?d.name:'???'}</h2>${c?`<div>${this.tag(d)}</div><span class="rarity-label">${d.rarity}${d.nationalDex?' · #'+d.nationalDex:''}</span><p>${d.description}</p><small>Lv. ${c.level} · ${c.hp}/${c.maxHp} HP · ATK ${d.attack+c.level*2} · DEF ${d.defense}</small><small>${c.xp}/${c.level*25} XP · ${copies.length} in collection</small><p class="habitat">${d.regions.map(id=>all.find(r=>r.id===id)?.name).join(' / ')}</p><small>Moves: Attack · ${d.special}</small><button class="${c.id===s.activeId?'secondary':'primary'}" data-active="${c.id}" ${c.id===s.activeId?'disabled':''}>${c.id===s.activeId?'Your active friend':'Explore together'}</button>`:'<p>A friend waiting to be discovered.</p><small>Explore new regions to meet it.</small>'}</article>`;
+    }).join('') + `</div>${!visible.length?'<p>No discovered friends match these filters yet.</p>':''}<div class="button-row"><button class="secondary" id="potion-btn" ${!s.potions||!this.game.store.active()?'disabled':''}>Use a potion (${s.potions}) · Heal active friend</button><button class="secondary" id="close-collection">Back to the island</button></div><p class="hint">Filters show discovered species only. Nora heals every friend for free. All captured instances remain in your roster.</p>`, 'collection');
+    for (const key of ['type', 'rarity', 'region']) document.getElementById('filter-' + key).onchange = e => this.collection({
+      ...filters,
+      [key]: e.target.value
+    });
     document.querySelectorAll('[data-active]').forEach(b => b.onclick = () => {
       s.activeId = b.dataset.active;
       this.game.store.save();
@@ -236,24 +257,51 @@ Prime.ui.UI = class {
     }]);
   }
   map() {
-    this.open(this.header('YOUR LITTLE ARCHIPELAGO', 'There is a whole world nearby.') + '<canvas id="island-map" class="map-canvas" width="896" height="736" aria-label="Island map showing your position"></canvas><div class="legend"><span>Center · Welcome Meadow</span><span>West · Whispering Grove</span><span>North · Prime Academy</span><span>East · Little Shop</span><span>South · Sunbeam Beach</span><span>Southwest · Quiet Cove</span></div><p class="hint">The green dot is you. Follow the wooden bridges to visit every island. The Healing House is on Welcome Meadow.</p>', 'map');
-    const ctx = document.getElementById('island-map').getContext('2d');
-    ctx.imageSmoothingEnabled = false;
-    ctx.scale(.5, .5);
-    ctx.drawImage(this.game.world.layer, 0, 0);
-    for (const b of this.game.world.data.buildings) this.game.world.drawBuilding(ctx, b);
-    ctx.fillStyle = '#305945';
-    ctx.strokeStyle = '#fff9e4';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.arc(this.game.player.x, this.game.player.y, 14, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    for (const i of this.game.world.data.islands) {
-      ctx.font = 'bold 18px Trebuchet MS';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#355842';
-      ctx.fillText(i.name, (i.x + i.w / 2) * 32, (i.y + i.h - 1) * 32);
-    }
+    const world = this.game.world,
+      store = this.game.store,
+      s = store.state;
+    this.open(this.header('YOUR EXPLORER MAP', 'Ten regions. A bigger adventure.') + `<canvas id="island-map" class="map-canvas" width="1000" height="560" aria-label="World map showing your position and explorer gates"></canvas><div class="region-list">${world.data.islands.map((r,index)=>{
+      const visited=s.exploration.visited.includes(r.id),open=world.isOpen(r.id);
+      return `<article class="region-entry ${open?'':'locked'}"><span class="region-number" style="background:${r.color}">${index+1}</span><div><strong>${r.name}</strong><small>${r.biome} · ${r.levels[0]}–${r.levels[1]} Lv. · ${visited?'Discovered':open?'Follow the bridges':'Explorer gate'}</small>${!open?`<p>${store.unlockStatus(r.id).hint}</p>`:''}</div><button class="secondary" data-travel="${r.id}" ${!visited||!open?'disabled':''}>Travel</button></article>`;
+    }).join('')}</div><p class="hint">The green dot is you. Travel is free after you visit a region. Golden gates open through progress and a short English challenge. Discovery posts teach words and offer a one-time reward.</p>`, 'map');
+    const canvas = document.getElementById('island-map'),
+      c = canvas.getContext('2d'),
+      scale = Math.min(canvas.width / world.width, canvas.height / world.height);
+    c.imageSmoothingEnabled = false;
+    c.fillStyle = '#62b8ca';
+    c.fillRect(0, 0, canvas.width, canvas.height);
+    c.translate((canvas.width - world.width * scale) / 2, (canvas.height - world.height * scale) / 2);
+    c.scale(scale, scale);
+    c.drawImage(world.layer, 0, 0);
+    for (const p of world.props) world.drawProp(c, p);
+    for (const b of world.data.buildings) world.drawBuilding(c, b);
+    world.data.islands.forEach((r, index) => {
+      if (!world.isOpen(r.id)) {
+        world.traceRegion(c, r);
+        c.fillStyle = '#31404f66';
+        c.fill();
+      }
+      const x = (r.x + r.w / 2) * 32,
+        y = (r.y + r.h / 2) * 32;
+      c.fillStyle = '#fff7df';
+      c.beginPath();
+      c.arc(x, y, 23, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = '#3b5945';
+      c.textAlign = 'center';
+      c.font = 'bold 28px Trebuchet MS';
+      c.fillText(String(index + 1), x, y + 10);
+    });
+    for (const gate of world.data.gates) world.drawGate(c, gate, 0);
+    c.fillStyle = '#305945';
+    c.strokeStyle = '#fff9e4';
+    c.lineWidth = 6;
+    c.beginPath();
+    c.arc(this.game.player.x, this.game.player.y, 19, 0, Math.PI * 2);
+    c.fill();
+    c.stroke();
+    document.querySelectorAll('[data-travel]').forEach(b => b.onclick = () => {
+      if (!this.game.travelTo(b.dataset.travel)) this.toast('Visit this region on foot before traveling there.');
+    });
   }
 };

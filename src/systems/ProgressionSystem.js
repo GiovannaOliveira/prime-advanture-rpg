@@ -21,7 +21,12 @@ Prime.systems.ProgressionSystem = class {
       streak: 0,
       history: [],
       position: null,
-      questionHistory: Prime.systems.QuestionScheduler.emptyHistory()
+      questionHistory: Prime.systems.QuestionScheduler.emptyHistory(),
+      exploration: {
+        visited: [],
+        unlocked: [],
+        claimed: []
+      }
     };
   }
   load() {
@@ -42,7 +47,7 @@ Prime.systems.ProgressionSystem = class {
     if (['Beginner', 'Elementary', 'Intermediate'].includes(raw.difficulty)) s.difficulty = raw.difficulty;
     const ids = new Set();
     if (Array.isArray(raw.party))
-      for (const c of raw.party.slice(0, 100)) {
+      for (const c of raw.party.slice(0, Prime.data.rules.maxCollection)) {
         if (!c || !Object.hasOwn(Prime.data.creatures, c.species)) continue;
         const level = num(c.level, 1, 50),
           d = Prime.data.creatures[c.species],
@@ -69,7 +74,62 @@ Prime.systems.ProgressionSystem = class {
       y: raw.position.y
     };
     s.questionHistory = Prime.systems.QuestionScheduler.normalize(raw.questionHistory);
+    const regionIds = new Set((Prime.data.map?.islands || []).map(r => r.id));
+    for (const key of ['visited', 'unlocked', 'claimed']) {
+      const values = raw.exploration?.[key];
+      s.exploration[key] = Array.isArray(values) ? [...new Set(values.filter(id => regionIds.has(id)))] : [];
+    }
     return s;
+  }
+  regionOpen(id) {
+    const region = Prime.data.map?.islands.find(r => r.id === id);
+    return !!region && (!region.requirement || this.state.exploration.unlocked.includes(id));
+  }
+  visit(id) {
+    if (!this.regionOpen(id) || this.state.exploration.visited.includes(id)) return false;
+    this.state.exploration.visited.push(id);
+    this.save();
+    return true;
+  }
+  unlockStatus(id) {
+    const requirement = Prime.data.map?.islands.find(r => r.id === id)?.requirement || {};
+    const s = this.state,
+      checks = [];
+    if (requirement.adventure) checks.push({
+      ok: s.wins + s.captures >= requirement.adventure,
+      text: 'Win a friendly battle or capture a creature (' + Math.min(requirement.adventure, s.wins + s.captures) + ' / ' + requirement.adventure + ').'
+    });
+    if (requirement.answers) checks.push({
+      ok: s.answers >= requirement.answers,
+      text: 'Solve English questions (' + Math.min(s.answers, requirement.answers) + ' / ' + requirement.answers + ').'
+    });
+    if (requirement.visited) checks.push({
+      ok: s.exploration.visited.length >= requirement.visited,
+      text: 'Discover regions (' + Math.min(s.exploration.visited.length, requirement.visited) + ' / ' + requirement.visited + ').'
+    });
+    if (requirement.captures) checks.push({
+      ok: s.captures >= requirement.captures,
+      text: 'Capture creatures (' + Math.min(s.captures, requirement.captures) + ' / ' + requirement.captures + ').'
+    });
+    return {
+      ready: checks.every(c => c.ok),
+      hint: checks.map(c => c.text).join(' ')
+    };
+  }
+  unlockRegion(id) {
+    if (this.regionOpen(id) || !Prime.data.map?.islands.some(r => r.id === id) || !this.unlockStatus(id).ready) return false;
+    this.state.exploration.unlocked.push(id);
+    this.save();
+    return true;
+  }
+  claimDiscovery(id) {
+    if (!this.regionOpen(id) || !this.state.exploration.visited.includes(id) || this.state.exploration.claimed.includes(id)) return false;
+    this.state.exploration.claimed.push(id);
+    this.state.coins += 15;
+    this.state.orbs++;
+    this.state.playerXp += 10;
+    this.save();
+    return true;
   }
   save() {
     try {

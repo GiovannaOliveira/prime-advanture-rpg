@@ -1,6 +1,6 @@
-# Prime Adveture
+# Prime Adventure
 
-A cozy, desktop creature RPG for English learners aged 7–12. Explore six connected islands, meet six creature species, and practice a little English along the way. All game text is in English.
+A cozy, desktop creature RPG for English learners aged 7–12. Explore ten connected regions, meet 56 creature species (including 40 Gen I Pokémon from the supplied workbook), and practice a little English along the way. All game text is in English.
 
 ## Play
 
@@ -36,13 +36,20 @@ The player is controllable immediately. Choose Leaflet, Emberbun, or Ripple usin
 - **Prime Academy:** follow the northern bridge for Professor Willow and learning guidance.
 - **Little Trading Post:** cross the eastern bridge to buy capture orbs and healing potions from Milo.
 - **Sunbeam Beach:** cross the southern bridge for water creatures and a very rare visitor.
-- **Quiet Cove:** cross the southwest bridge for a peaceful decorative dock and boat. The boat is not a travel system.
+- **Quiet Cove:** cross the southwest bridge for harbor encounters and the boat/map return-travel menu.
 
-All islands are connected by walkable wooden bridges. The Map button shows the world and your position. Water, tree trunks, rocks, chest, and building footprints are solid. Character sprites can appear behind tree canopies and roofs.
+- **Ember Highlands:** east of the shop; one friendly win or capture plus an English challenge opens the gate.
+- **Crystal Caverns:** bridges from the beach and trading post lead to crystal fields and pools.
+- **Frostpeak Island:** beyond Ember; eight solved questions plus a gate challenge unlock the snow trails.
+- **Mystic Ruins:** east of the caverns and south of Frostpeak; discover eight regions and make three captures, then answer a gate challenge.
+
+Read each region's discovery post to learn a word and earn a one-time reward after a question. The map offers free travel back to unlocked regions you have already visited. See [EXPANSION.md](EXPANSION.md) for routes, exact rules, data sources, sprite limitations, and the full creature distribution.
+
+All regions are connected by walkable wooden bridges. The Map button shows the world and your position. Water, tree trunks, rocks, chest, and building footprints are solid. Character sprites can appear behind tree canopies and roofs.
 
 ### Creatures and battles
 
-The six species are Leaflet (Grass), Emberbun (Fire), Ripple (Water), Pebblit (Earth), Skydot (Air), and Frosthart (Ice). Their art comes from the supplied packs; the game names and simple data are specific to this prototype.
+The original six species and their IDs remain: Leaflet, Emberbun, Ripple, Pebblit, Skydot, and Frosthart. Ten additional animated pack species and forty official Gen I Pokémon bring the playable total to 56. Pokémon names, types, and static portraits come from the user-supplied workbook; HP, attack, defense, moves, and encounter rarity are custom prototype balance, not official Pokémon/GO stats. The standalone reference catalog has 1,025 national species, but only the selected forty Pokémon are playable in this release.
 
 Press E near a visible wild creature to start a turn-based battle:
 
@@ -53,9 +60,9 @@ Press E near a visible wild creature to start a turn-based battle:
 
 Commands lock while turns resolve. A correct question answer gives 5 adventure XP. Winning or capturing gives creature XP and 10 coins; creature level-ups increase max HP and restore some health. If your active friend runs out of HP, return to Nora or use a potion. Fainted friends remain in the collection.
 
-Open **Collection** to choose any captured instance as your active friend or use a potion. The species grid tracks all six species; the roster lists every captured friend, including duplicates. The prototype limits the collection to 100 instances. Each potion fully heals the active friend; Nora heals the entire collection for free.
+Open **Collection** to choose any captured instance as your active friend or use a potion. The species grid and filters track all 56 species; the roster lists every captured friend, including duplicates. The prototype limits the collection to 300 instances. Each potion fully heals the active friend; Nora heals the entire collection for free.
 
-Wild encounters spawn in the marked patches every 3–6 seconds, up to eight at once. Rarity roll weights are Common 72, Uncommon 21, Rare 6, Legendary 1. A roll with no eligible species in that area produces no spawn. Creatures move slowly within their zones, and distant creatures expire after about 210 seconds. Only active play advances this simulation.
+Wild encounters spawn in the marked patches every 3–6 seconds, up to eight at once. The configurable weights are Common 72, Uncommon 21, Rare 6, Legendary 1, normalized among eligible rarities in the current patch. Regional levels, habitat restrictions, and additional legendary discovery conditions are applied. Population refreshes on region changes; no more than four wild instances occupy one region. Creatures move slowly within their zones, and distant creatures expire after about 210 seconds. Only active play advances this simulation.
 
 ### English club
 
@@ -95,7 +102,7 @@ Cooldown and streak use the device clock and browser `localStorage`; they surviv
 
 ## Saving and resetting
 
-The game saves creatures, selected starter, active friend, XP, answers, coins, items, daily gift, difficulty, safe player position, and per-question learning history under `prime-adveture-save-v1` in local storage. Saving runs during progression changes, every few seconds of play, and when leaving the page. Loaded values are validated and normalized; corrupt or unsupported-version saves safely start a new game. Position is restored only on walkable ground.
+The game saves creatures, selected starter, active friend, XP, answers, coins, items, daily gift, difficulty, safe player position, per-question learning history, and visited/unlocked regions and discovery rewards under `prime-adveture-save-v1` in local storage. Saving runs during progression changes, every few seconds of play, and when leaving the page. Loaded values are validated and normalized; corrupt or unsupported-version saves safely start a new game. Position is restored only on walkable ground.
 
 Use **Settings → Reset progress → Yes, start again** to start over. This confirmation deletes only this game's browser save. **Return to meadow** changes position without deleting progress.
 
@@ -122,10 +129,15 @@ TESTING.md                 Browser validation and limitations
 tests/questions.test.cjs   Dependency-free Node question-bank/scheduler tests
 tests/question-playtest.py Question/history browser integration tests
 tests/playtest.py          Existing gameplay regression suite
+tests/world-data.test.cjs  Expansion metadata, assets and import validation
+tests/expansion-playtest.py World/collection/save browser acceptance suite
+scripts/import-pokemon.py Offline importer for the supplied Excel workbook
+data/pokemon-catalog.json Reference metadata for 1,025 national species
+EXPANSION.md              Regions, gates, habitats, art limits and save compatibility
 ```
 
-The central registry is `src/data/assets.js`, including explicit sprite-sheet frame sizes. Missing images warn in the console and use a readable Canvas/CSS fallback instead of preventing startup. UI sprite sheets use CSS cropping, so they do not require Canvas pixel readback from local files.
+The central asset registry starts in `src/data/assets.js`; `src/data/pokemon.js` registers workbook portraits explicitly. Animated sheets retain frame sizes while static portraits use aspect-preserving rendering. Missing images warn in the console and use a readable Canvas/CSS fallback instead of preventing startup. UI sprite sheets use CSS cropping, so they do not require Canvas pixel readback from local files.
 
 ## Prototype scope
 
-Desktop keyboard and mouse only; no mobile controls, audio, backend, multiplayer, accounts, interiors, travel boat, evolution, or student-specific curriculum. Shop and Academy interactions happen outside their buildings. The small follower is decorative. Rare encounters are random and are not guaranteed during a short session. External image generation was not used: supplied PNG/font assets are reused, with original Canvas decorations for bridges, flowers, chest, signs, beach props, and boat.
+Desktop keyboard and mouse only; no mobile controls, audio, backend, multiplayer, accounts, building interiors, evolution, or student-specific curriculum. Shop and Academy interactions happen outside their buildings. The small follower is decorative. Rare encounters are random and are not guaranteed during a short session. External image generation was not used: supplied pack PNG/font assets and workbook Pokémon portraits are reused, with original Canvas decorations for bridges, flowers, chest, signs, beach props, and boat.

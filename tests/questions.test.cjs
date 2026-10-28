@@ -6,9 +6,9 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { webcrypto } = require('node:crypto');
 const scripts = [
-  'src/data/assets.js', 'src/data/creatures.js', 'src/data/questions.js',
+  'src/data/assets.js', 'src/data/creatures.js', 'src/data/pokemon.js', 'src/data/questions.js',
   'src/data/questions/beginner.js', 'src/data/questions/elementary.js',
-  'src/data/questions/intermediate.js', 'src/systems/QuestionScheduler.js',
+  'src/data/questions/intermediate.js', 'src/data/map.js', 'src/data/world-expansion.js', 'src/systems/QuestionScheduler.js',
   'src/systems/ProgressionSystem.js'
 ];
 function setup() {

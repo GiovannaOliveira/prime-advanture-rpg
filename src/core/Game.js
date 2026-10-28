@@ -18,13 +18,14 @@ Prime.Game = class {
   }
   async init() {
     await this.assets.load();
-    this.world = new Prime.WorldMap(this.assets);
+    this.world = new Prime.WorldMap(this.assets, this.store);
     this.player = new Prime.Player(this);
     this.ui = new Prime.ui.UI(this);
     this.input = new Prime.InputManager(this);
     this.encounters = new Prime.systems.EncounterSystem(this);
     this.english = new Prime.systems.EnglishChallengeSystem(this);
     this.battle = new Prime.systems.BattleSystem(this);
+    this.recordRegion();
     this.resize();
     window.addEventListener('resize', () => this.resize());
     window.addEventListener('pagehide', () => this.savePosition());
@@ -57,6 +58,7 @@ Prime.Game = class {
     if (!this.ui.isOpen() && !document.hidden) {
       this.player.update(dt);
       this.player.updatePet(dt);
+      this.recordRegion();
       this.encounters.update(dt);
       this.autosave += dt;
       if (this.autosave > 3) {
@@ -117,6 +119,14 @@ Prime.Game = class {
         ctx.fillText(n.action === 'academy' ? '!' : n.action === 'heal' ? '+' : '$', n.x * 32, n.y * 32 - 48);
       }
     });
+    for (const gate of this.world.data.gates || []) drawables.push({
+      y: gate.y * 32,
+      draw: () => this.world.drawGate(ctx, gate, time)
+    });
+    for (const region of this.world.data.islands) drawables.push({
+      y: region.note[1] * 32,
+      draw: () => this.world.drawDiscovery(ctx, region, time, this.store.state.exploration.claimed.includes(region.id))
+    });
     for (const c of this.encounters.wild) drawables.push({
       y: c.y,
       draw: () => this.encounters.draw(ctx, c, time)
@@ -167,11 +177,36 @@ Prime.Game = class {
       kind: 'creature',
       data: c
     });
+    for (const gate of this.world.data.gates || [])
+      if (!this.world.isOpen(gate.region)) targets.push({
+        x: gate.x * 32,
+        y: gate.y * 32,
+        label: 'Open the explorer gate',
+        kind: 'gate',
+        data: gate
+      });
+    for (const region of this.world.data.islands) targets.push({
+      x: region.note[0] * 32,
+      y: region.note[1] * 32,
+      label: 'Read the discovery post',
+      kind: 'discovery',
+      data: region
+    });
+    targets.push({
+      x: 7 * 32,
+      y: 37.5 * 32,
+      label: 'Travel with the harbor boat',
+      kind: 'travel'
+    });
     targets.forEach(t => t.distance = Math.hypot(t.x - this.player.x, t.y - this.player.y));
     this.nearby = targets.filter(t => t.distance < 65).sort((a, b) => a.distance - b.distance)[0] || null;
     const el = document.getElementById('interact-prompt');
     el.hidden = !this.nearby;
-    if (this.nearby) el.querySelector('span').textContent = this.nearby.label;
+    if (this.nearby) {
+      el.querySelector('span').textContent = this.nearby.label;
+      el.style.left = Math.max(150, Math.min(this.camera.w - 150, this.player.x - this.camera.x)) + 'px';
+      el.style.top = Math.max(100, Math.min(this.camera.h - 145, this.player.y - this.camera.y + 60)) + 'px';
+    }
   }
   interact() {
     if (this.ui.isOpen()) return;
@@ -206,10 +241,86 @@ Prime.Game = class {
       case 'sign':
         this.ui.dialogue(t.data.title, t.data.text);
         break;
+      case 'gate':
+        this.openGate(t.data.region);
+        break;
+      case 'discovery':
+        this.discovery(t.data);
+        break;
+      case 'travel':
+        this.ui.map();
+        break;
       case 'creature':
         this.battle.start(t.data);
         break;
     }
+  }
+  recordRegion() {
+    const region = this.world.regionAt(this.player.x, this.player.y);
+    if (region && this.store.visit(region.id)) {
+      this.ui?.updateHUD();
+      if (this.store.state.exploration.visited.length > 1) this.ui?.toast('Discovered: ' + region.name);
+    }
+  }
+  openGate(id) {
+    const region = this.world.data.islands.find(r => r.id === id),
+      status = this.store.unlockStatus(id);
+    if (!status.ready) {
+      this.ui.dialogue(region.name + ' · Explorer gate', status.hint + ' Come back when you are ready.', [{
+        label: 'Practice English',
+        action: () => this.ui.englishClub()
+      }, {
+        label: 'Back to exploring',
+        action: () => this.ui.close(true)
+      }]);
+      return;
+    }
+    this.english.open('Open the path to ' + region.name + '!', () => {
+      this.store.unlockRegion(id);
+      this.ui.close(true);
+      this.ui.toast('The path to ' + region.name + ' is open!');
+    }, () => this.ui.close(true));
+  }
+  discovery(region) {
+    this.recordRegion();
+    const claimed = this.store.state.exploration.claimed.includes(region.id);
+    this.ui.dialogue(region.name + ' · Field notes', region.lesson, [{
+      label: claimed ? 'Back to exploring' : 'Try a discovery challenge',
+      action: () => {
+        if (claimed) {
+          this.ui.close(true);
+          return;
+        }
+        this.english.open('A discovery at ' + region.name, () => {
+          if (this.store.claimDiscovery(region.id)) this.ui.toast('Discovery recorded! +15 coins · +1 orb · +10 XP');
+          this.ui.updateHUD();
+          this.ui.close(true);
+        }, () => this.ui.close(true));
+      }
+    }, ...(!claimed ? [{
+      label: 'Maybe later',
+      action: () => this.ui.close(true)
+    }] : [])]);
+  }
+  travelTo(id) {
+    const region = this.world.data.islands.find(r => r.id === id);
+    if (!region || !this.world.isOpen(id) || !this.store.state.exploration.visited.includes(id)) return false;
+    const [x, y] = region.arrival.map(n => n * 32);
+    if (!this.world.walkable(x, y)) return false;
+    this.player.x = x;
+    this.player.y = y;
+    this.player.trail = [{
+      x: x - 20,
+      y: y + 15
+    }];
+    this.player.pet = {
+      ...this.player.trail[0]
+    };
+    this.encounters.refresh();
+    this.savePosition();
+    this.ui.close(true);
+    this.ui.toast('Welcome back to ' + region.name + '!');
+    return true;
   }
   savePosition() {
     if (this.player) {

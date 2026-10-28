@@ -6,7 +6,10 @@ Prime.systems.QuestionScheduler = class {
     return {
       sequence: 0,
       records: {},
-      review: Object.fromEntries(this.levels.map(level => [level, { cycle: 0, seen: [] }]))
+      review: Object.fromEntries(this.levels.map(level => [level, {
+        cycle: 0,
+        seen: []
+      }]))
     };
   }
   static normalize(raw) {
@@ -23,7 +26,9 @@ Prime.systems.QuestionScheduler = class {
       const responses = Math.min(presentations, count(entry.responses));
       const completions = Math.min(responses, count(entry.completions));
       const normalized = {
-        presentations, responses, completions,
+        presentations,
+        responses,
+        completions,
         firstTryCorrect: Math.min(completions, count(entry.firstTryCorrect)),
         mistakes: Math.min(responses * 2, count(entry.mistakes)),
         lastSeen: count(entry.lastSeen),
@@ -52,8 +57,14 @@ Prime.systems.QuestionScheduler = class {
   record(id) {
     const h = this.store.state.questionHistory;
     if (!Object.hasOwn(h.records, id)) h.records[id] = {
-      presentations: 0, responses: 0, completions: 0, firstTryCorrect: 0,
-      mistakes: 0, lastSeen: 0, lastPresentedAt: 0, lastAnsweredAt: 0
+      presentations: 0,
+      responses: 0,
+      completions: 0,
+      firstTryCorrect: 0,
+      mistakes: 0,
+      lastSeen: 0,
+      lastPresentedAt: 0,
+      lastAnsweredAt: 0
     };
     return h.records[id];
   }
@@ -95,7 +106,10 @@ Prime.systems.QuestionScheduler = class {
     // Pick a topic first so large topics do not crowd out smaller ones.
     const topic = this.pick([...new Set(candidates.map(q => q.topic))]);
     const source = this.pick(candidates.filter(q => q.topic === topic));
-    const options = source.options.map((text, index) => ({ text, correct: index === source.answer }));
+    const options = source.options.map((text, index) => ({
+      text,
+      correct: index === source.answer
+    }));
     for (let i = options.length - 1; i > 0; i--) {
       const j = Math.min(i, Math.floor(this.random() * (i + 1)));
       [options[i], options[j]] = [options[j], options[i]];
@@ -107,8 +121,15 @@ Prime.systems.QuestionScheduler = class {
     if (mode === 'review' || round.cycle > 0) round.seen.push(source.id);
     this.store.save(); // Presentation survives cancellation, reload, and browser closure.
     return {
-      q: { ...source, options: options.map(o => o.text), answer: options.findIndex(o => o.correct) },
-      mode, cycle: mode === 'review' ? round.cycle : 0, attempts: [], solved: false
+      q: {
+        ...source,
+        options: options.map(o => o.text),
+        answer: options.findIndex(o => o.correct)
+      },
+      mode,
+      cycle: mode === 'review' ? round.cycle : 0,
+      attempts: [],
+      solved: false
     };
   }
   answer(session, index) {
@@ -125,7 +146,10 @@ Prime.systems.QuestionScheduler = class {
       if (firstAttempt) entry.firstTryCorrect++;
     } else entry.mistakes++;
     this.store.save();
-    return { correct, firstAttempt };
+    return {
+      correct,
+      firstAttempt
+    };
   }
   stats(level) {
     const questions = Prime.data.questions.filter(q => q.level === level);

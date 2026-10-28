@@ -12,7 +12,12 @@ Prime.systems.EnglishChallengeSystem = class {
       onCancel?.();
       return;
     }
-    this.current = { ...selection, context, onSuccess, onCancel };
+    this.current = {
+      ...selection,
+      context,
+      onSuccess,
+      onCancel
+    };
     this.render();
   }
   render() {

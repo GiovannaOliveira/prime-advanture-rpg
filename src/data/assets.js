@@ -28,7 +28,22 @@ Prime.data.assets = {
   waterEffect: 'assets/effects/water.png',
   iceEffect: 'assets/effects/ice.png'
 };
-for (const name of ['leaflet', 'emberbun', 'ripple', 'pebblit', 'skydot', 'frosthart']) {
+Object.assign(Prime.data.assets, {
+  iceTree: 'assets/world/ice_tree.png',
+  tealTree: 'assets/world/teal_tree.png',
+  smallTealTree: 'assets/world/teal_tree_small.png',
+  iceRock: 'assets/world/icerock1.png',
+  ruinPillar: 'assets/world/ruin_pillar.png',
+  brokenPillar: 'assets/world/ruin_pillar_broke.png',
+  ruinGate: 'assets/world/ruin_gate.png',
+  cottage: 'assets/world/house_small_alt.png',
+  snow: 'assets/backgrounds/snow.png',
+  coast: 'assets/backgrounds/coast.png',
+  magicEffect: 'assets/effects/magic.png',
+  shadowEffect: 'assets/effects/shadow.png'
+});
+
+for (const name of ['leaflet', 'emberbun', 'ripple', 'pebblit', 'skydot', 'frosthart', 'thornpounce', 'groveguard', 'cinderstride', 'ashwarden', 'dreamtap', 'gloomcoil', 'tideglide', 'abyssong', 'budbit', 'lumenwing']) {
   Prime.data.assets[name] = `assets/creatures/${name}.png`;
   Prime.data.assets[name + 'Idle'] = `assets/creatures/${name}_idle.png`;
   Prime.data.assets[name + 'Attack'] = `assets/creatures/${name}_attack.png`;
