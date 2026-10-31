@@ -63,7 +63,7 @@ Prime.AssetLoader = class {
     const img = this.images[id],
       factor = size * .6 / Math.max(img?.width || 128, img?.height || 128);
     const url = this.missing.includes(id) ? this.placeholder().toDataURL() : Prime.data.assets[id];
-    return `<span role="img" aria-label="${d.name}" class="sprite-image static-sprite ${extra}" style="--sprite-facing:${pose==='back'?-1:1};display:inline-block;flex-shrink:0;width:${size}px;height:${size}px;background-image:url('${url}');background-position:center;background-repeat:no-repeat;background-size:${(img?.width||128)*factor}px ${(img?.height||128)*factor}px;image-rendering:pixelated"></span>`;
+    return `<span role="img" aria-label="${d.name}" class="sprite-image static-sprite ${this.missing.includes(id)?'placeholder':''} ${extra}" style="--sprite-facing:${pose==='back'?-1:1};display:inline-block;flex-shrink:0;width:${size}px;height:${size}px;background-image:url('${url}');background-position:center;background-repeat:no-repeat;background-size:${(img?.width||128)*factor}px ${(img?.height||128)*factor}px;image-rendering:pixelated"></span>`;
   }
   iconMarkup(id, size) {
     return Prime.data.creatures[id].assetFormat === 'portrait' ? this.creatureMarkup(id, size) : this.markup(id + 'Icon', size, 0, 0, 32);

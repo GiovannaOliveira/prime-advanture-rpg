@@ -92,8 +92,8 @@ async def main():
         await page.keyboard.press('r')
         await page.get_by_role('button',name='Choose your first friend').click()
         await page.screenshot(path=str(ARTIFACTS/'02-starters.png'))
-        await page.get_by_role('button',name='Choose Leaflet',exact=True).click()
-        assert await page.evaluate('Prime.game.store.active().species')=='leaflet'
+        await page.get_by_role('button',name='Choose Bulbasaur',exact=True).click()
+        assert await page.evaluate('Prime.game.store.active().species')=='pokemon-0001'
         await encounter(page)
         await page.screenshot(path=str(ARTIFACTS/'03-battle.png'))
         before=await page.evaluate('Prime.game.battle.current.wild.hp')
@@ -246,12 +246,12 @@ async def main():
         fallback=await browser.new_page(viewport={'width':1280,'height':800})
         fallback.on('pageerror',lambda error:errors.append(str(error)))
         await fallback.route('**/assets/characters/player.png',lambda route:route.abort())
-        await fallback.route('**/assets/creatures/leaflet*',lambda route:route.abort())
+        await fallback.route('**/assets/creatures/pokemon-0001.png',lambda route:route.abort())
         await fallback.goto(URL);await ready(fallback)
         assert 'player' in await fallback.evaluate('Prime.game.assets.missing')
         await fallback.get_by_role('button',name='Choose your first friend').click()
         assert await fallback.locator('.sprite-image.placeholder').count()>=1
-        await fallback.get_by_role('button',name='Choose Leaflet',exact=True).click()
+        await fallback.get_by_role('button',name='Choose Bulbasaur',exact=True).click()
         assert await fallback.locator('#companion-art .placeholder').count()==1
         await fallback.screenshot(path=str(ARTIFACTS/'06-missing-assets.png'))
         await fallback.close()

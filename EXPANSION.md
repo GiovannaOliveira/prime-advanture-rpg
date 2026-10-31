@@ -1,5 +1,11 @@
 # Prime Adventure: world and collection expansion
 
+## Current roster policy
+
+Following the user’s updated choice, new adventures offer **40 Pokémon only**. Bulbasaur, Charmander and Squirtle are the starters. All 14 encounter patches exclude original species. The sixteen original definitions and assets remain solely for save compatibility: existing captures keep their IDs, stats, selection, healing and battle support. The collection hides unowned legacy species and includes owned legacy companions in its total. No additional original creatures were added.
+
+The expansion below describes the earlier mixed roster; its original-species encounter lists are superseded by this policy.
+
 The working game was expanded in place. It now has **10 regions, 14 encounter patches and 56 playable species**: the six existing creatures, ten additional animated species from the supplied packs, and forty Gen I Pokémon from the supplied workbook. The 300 English questions, first-try records, starter choices, daily gift, combat/capture loop, and inventory remain in use.
 
 ## World and routes

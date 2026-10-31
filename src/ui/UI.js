@@ -94,7 +94,7 @@ Prime.ui.UI = class {
       unique = new Set(s.party.map(c => c.species));
     document.getElementById('coins').textContent = s.coins;
     document.getElementById('orbs').textContent = s.orbs;
-    document.getElementById('collection-count').textContent = `${unique.size}/${Object.keys(Prime.data.creatures).length}`;
+    document.getElementById('collection-count').textContent = `${unique.size}/${Object.entries(Prime.data.creatures).filter(([id, d]) => !d.legacyOnly || unique.has(id)).length}`;
     if (active) {
       const d = Prime.data.creatures[active.species];
       document.getElementById('active-name').textContent = d.name;
@@ -146,7 +146,7 @@ Prime.ui.UI = class {
   }) {
     this.collectionFilters = filters;
     const s = this.game.store.state,
-      entries = Object.entries(Prime.data.creatures),
+      entries = Object.entries(Prime.data.creatures).filter(([id, d]) => !d.legacyOnly || s.party.some(c => c.species === id)),
       all = Prime.data.map.islands;
     const types = [...new Set(entries.flatMap(([, d]) => d.types || [d.type]))].sort();
     const options = (items, value) => ['All', ...items].map(t => `<option value="${t}" ${t===value?'selected':''}>${t}</option>`).join('');

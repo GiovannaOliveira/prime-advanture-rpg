@@ -13,7 +13,7 @@ Prime.systems.EncounterSystem = class {
   }
   eligible(id) {
     const d = Prime.data.creatures[id];
-    return d && (!d.requiresNote || this.game.store.state.exploration.claimed.includes(d.requiresNote));
+    return d && !d.legacyOnly && (!d.requiresNote || this.game.store.state.exploration.claimed.includes(d.requiresNote));
   }
   nearbyZones() {
     const p = this.game.player,

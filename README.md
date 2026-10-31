@@ -1,6 +1,6 @@
 # Prime Adventure
 
-A cozy, desktop creature RPG for English learners aged 7–12. Explore ten connected regions, meet 56 creature species (including 40 Gen I Pokémon from the supplied workbook), and practice a little English along the way. All game text is in English.
+A cozy, desktop creature RPG for English learners aged 7–12. Explore ten connected regions, meet 40 Gen I Pokémon from the supplied workbook, and practice a little English along the way. All game text is in English.
 
 ## Play
 
@@ -27,7 +27,7 @@ Then open `http://localhost:8000` in your own browser. Saves belong to the brows
 | R | Return to the starting meadow if you lose your way |
 | Mouse | Choose actions, answers, creatures, and menu options |
 
-The player is controllable immediately. Choose Leaflet, Emberbun, or Ripple using the welcome card, or walk north to Professor Willow. A small friendly companion follows your trail and does not block movement.
+The player is controllable immediately. Choose Bulbasaur, Charmander, or Squirtle using the welcome card, or walk north to Professor Willow. A small friendly companion follows your trail and does not block movement.
 
 ## Your adventure
 
@@ -49,7 +49,7 @@ All regions are connected by walkable wooden bridges. The Map button shows the w
 
 ### Creatures and battles
 
-The original six species and their IDs remain: Leaflet, Emberbun, Ripple, Pebblit, Skydot, and Frosthart. Ten additional animated pack species and forty official Gen I Pokémon bring the playable total to 56. Pokémon names, types, and static portraits come from the user-supplied workbook; HP, attack, defense, moves, and encounter rarity are custom prototype balance, not official Pokémon/GO stats. The standalone reference catalog has 1,025 national species, but only the selected forty Pokémon are playable in this release.
+The original six species and their IDs remain: Leaflet, Emberbun, Ripple, Pebblit, Skydot, and Frosthart. The sixteen original pack species remain available only for existing captured companions. New starters and all wild encounters use the forty official Gen I Pokémon. Pokémon names, types, and static portraits come from the user-supplied workbook; HP, attack, defense, moves, and encounter rarity are custom prototype balance, not official Pokémon/GO stats. The standalone reference catalog has 1,025 national species, but only the selected forty Pokémon are playable in this release.
 
 Press E near a visible wild creature to start a turn-based battle:
 
@@ -60,7 +60,7 @@ Press E near a visible wild creature to start a turn-based battle:
 
 Commands lock while turns resolve. A correct question answer gives 5 adventure XP. Winning or capturing gives creature XP and 10 coins; creature level-ups increase max HP and restore some health. If your active friend runs out of HP, return to Nora or use a potion. Fainted friends remain in the collection.
 
-Open **Collection** to choose any captured instance as your active friend or use a potion. The species grid and filters track all 56 species; the roster lists every captured friend, including duplicates. The prototype limits the collection to 300 instances. Each potion fully heals the active friend; Nora heals the entire collection for free.
+Open **Collection** to choose any captured instance as your active friend or use a potion. The species grid and filters track the 40 Pokémon plus any original species already owned; the roster lists every captured friend, including duplicates. The prototype limits the collection to 300 instances. Each potion fully heals the active friend; Nora heals the entire collection for free.
 
 Wild encounters spawn in the marked patches every 3–6 seconds, up to eight at once. The configurable weights are Common 72, Uncommon 21, Rare 6, Legendary 1, normalized among eligible rarities in the current patch. Regional levels, habitat restrictions, and additional legendary discovery conditions are applied. Population refreshes on region changes; no more than four wild instances occupy one region. Creatures move slowly within their zones, and distant creatures expire after about 210 seconds. Only active play advances this simulation.
 

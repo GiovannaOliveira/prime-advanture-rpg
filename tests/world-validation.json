@@ -13,9 +13,9 @@
   "legacyCreaturesPreserved": 6,
   "page_errors": [],
   "screenshots": "/tmp/prime-expansion-tests",
-  "node_tests": {
-    "command": "node --test tests/questions.test.cjs tests/world-data.test.cjs",
-    "passed": 14,
+  "rosterPolicy": "40 Pok\u00e9mon for new starters and encounters; captured originals preserved",
+  "nodeTests": {
+    "passed": 15,
     "failed": 0
   }
 }

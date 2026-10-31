@@ -689,11 +689,19 @@
   }
   for (const prop of world.props)
     if (prop[1] >= 43 && prop[1] <= 79 && prop[2] >= 32 && prop[2] <= 59 && prop[0].toLowerCase().includes('pillar')) prop[0] = 'crystal';
+  // Original species remain readable only for existing saves. New adventures use Pokémon.
+  for (const [id, species] of Object.entries(Prime.data.creatures)) {
+    species.legacyOnly = species.origin !== 'pokemon-workbook';
+    species.starter = ['pokemon-0001', 'pokemon-0004', 'pokemon-0007'].includes(id);
+  }
+  for (const zone of world.zones) {
+    zone.species = zone.species.filter(id => !Prime.data.creatures[id].legacyOnly);
+  }
   // Every species carries its actual habitats and level range, derived from encounter data.
   for (const [id, species] of Object.entries(Prime.data.creatures)) {
     const zones = world.zones.filter(z => z.species.includes(id));
     species.regions = [...new Set(zones.map(z => z.region))];
-    species.levelRange = [Math.min(...zones.map(z => z.levels[0])), Math.max(...zones.map(z => z.levels[1]))];
+    species.levelRange = zones.length ? [Math.min(...zones.map(z => z.levels[0])), Math.max(...zones.map(z => z.levels[1]))] : [1, 8];
   }
   Prime.data.creatures.frosthart.requiresNote = 'frost';
   Prime.data.creatures.ashwarden.requiresNote = 'ember';

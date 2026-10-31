@@ -1,3 +1,7 @@
+## Pokémon-only roster update
+
+The updated policy is verified by 15 Node tests, including Pokémon-only starters and encounter patches, absence of wild original species, and preservation of old captured originals. Browser assertions verify a fresh journal contains 40 species and an old save with six original captures contains 46 visible species, with the correct HUD totals. The starter and missing-image regression fixtures now use Bulbasaur. All 23 gameplay regression groups and the expansion browser suite passed without page errors; the latter captured all 40 Pokémon and retained six legacy companions. Starter and battle screenshots were inspected.
+
 # Validation
 
 Expansion validated on 2026-10-28 in headless desktop Chromium, using the actual Canvas game and HTML UI through Python Playwright. Screenshots were inspected for the world, starter choice, battle, English question, map, missing-asset fallback, and smaller desktop layout.

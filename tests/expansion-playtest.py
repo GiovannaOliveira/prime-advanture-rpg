@@ -15,8 +15,14 @@ async def main():
   page=await browser.new_page(viewport={'width':1440,'height':960});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   await page.goto('http://127.0.0.1:8000');await ready(page)
   assert await page.title()=='Prime Adventure · A little English, a big adventure'
-  summary=await page.evaluate('''()=>({regions:Prime.data.map.islands.length,species:Object.keys(Prime.data.creatures).length,pokemon:Object.values(Prime.data.creatures).filter(d=>d.origin==='pokemon-workbook').length,missing:Prime.game.assets.missing,unplaced:Object.values(Prime.data.creatures).filter(d=>!d.regions.length||!d.levelRange.every(Number.isFinite)).length})''')
+  summary=await page.evaluate('''()=>({regions:Prime.data.map.islands.length,species:Object.keys(Prime.data.creatures).length,pokemon:Object.values(Prime.data.creatures).filter(d=>d.origin==='pokemon-workbook').length,missing:Prime.game.assets.missing,unplaced:Object.values(Prime.data.creatures).filter(d=>(!d.legacyOnly&&!d.regions.length)||!d.levelRange.every(Number.isFinite)).length})''')
   assert summary=={'regions':10,'species':56,'pokemon':40,'missing':[],'unplaced':0},summary
+  assert await page.evaluate("Object.values(Prime.data.creatures).filter(d=>d.starter).map(d=>d.nationalDex)")==[1,4,7]
+  assert not await page.evaluate("Prime.game.encounters.eligible('leaflet')")
+  await page.evaluate('Prime.game.ui.collection()')
+  assert await page.locator('.collection-grid .creature-card').count()==40
+  assert await page.locator('#collection-count').inner_text()=='0/40'
+  await page.keyboard.press('Escape')
   await page.screenshot(path=str(OUT/'01-village.png'))
   # Restore a v1 save with all original IDs and real question history, but no expansion field.
   legacy=await page.evaluate('''()=>{
@@ -29,6 +35,11 @@ async def main():
   restored=await page.evaluate('Prime.game.store.state')
   for key in ['party','activeId','coins','orbs','answers','playerXp','questionHistory']:assert restored[key]==legacy[key],key
   assert 'meadow' in restored['exploration']['visited']
+  await page.evaluate('Prime.game.ui.collection()')
+  assert await page.locator('.collection-grid .creature-card').count()==46
+  assert 'Leaflet' in await page.locator('.collection-grid').inner_text()
+  assert await page.locator('#collection-count').inner_text()=='6/46'
+  await page.keyboard.press('Escape')
   assert not await page.evaluate('Prime.game.world.walkable(55*32,20*32)')
   assert not await page.evaluate("Prime.game.travelTo('ember')")
   assert not await page.evaluate("Prime.game.encounters.eligible('pokemon-0146')")
